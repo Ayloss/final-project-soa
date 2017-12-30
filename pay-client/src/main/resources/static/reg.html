@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>注册</title>
+    <link href="lib/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <style>
+        .register-form {
+            position: absolute;
+            width: 400px;
+            height: 600px;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            margin: auto;
+        }
+    </style>
+</head>
+<body ng-app="app" ng-controller="c1">
+<div class="register-form">
+    <div class="row">
+        <h3 class="page-header">
+            注册账号
+        </h3>
+    </div>
+    <div class="row">
+        <div class="alert alert-danger" ng-show="error === 101">
+            手机号已经存在
+        </div>
+        <div class="alert alert-danger" ng-show="error === 102">
+            银行卡号不存在
+        </div>
+    </div>
+    <div class="row">
+        <form method="post" name="regForm">
+            <div class="form-group">
+                <label for="telephone">手机号</label>
+                <input type="text" class="form-control" ng-model="telephone" name="telephone"
+                       ng-pattern="/^1[0-9]{10}$/" placeholder="11位手机号 12345678910" id="telephone" required/>
+                <span class="text-danger" ng-show="regForm.telephone.$error.required">手机号为空</span>
+                <span class="text-danger" ng-show="regForm.telephone.$error.pattern">手机号格式错误</span>
+            </div>
+            <div class="form-group">
+                <label for="password">登录密码</label>
+                <input type="text" class="form-control" ng-model="password" name="password"
+                       ng-pattern="/^[0-9a-zA-Z]{6,20}$/" placeholder="6-20位密码" id="password" required/>
+                <span class="text-danger" ng-show="regForm.password.$error.pattern">登录密码格式错误</span>
+                <span class="text-danger" ng-show="regForm.password.$error.required">登录密码为空</span>
+            </div>
+            <div class="form-group">
+                <label for="paypwd">支付密码</label>
+                <input type="text" class="form-control" ng-model="paypwd" name="paypwd" ng-pattern="/^\d{6}$/"
+                       placeholder="6位数字支付密码" id="paypwd" required/>
+                <span class="text-danger" ng-show="regForm.paypwd.$error.pattern">支付密码格式错误</span>
+                <span class="text-danger" ng-show="regForm.paypwd.$error.required">支付密码为空</span>
+            </div>
+            <div class="form-group">
+                <label for="bankcard">绑定银行卡</label>
+                <input type="text" class="form-control" ng-model="bankcard" name="bankcard"
+                       ng-pattern="/^(\d{16}|\d{19})$/" placeholder="16位或19位银行卡号" id="bankcard" required/>
+                <span class="text-danger" ng-show="regForm.bankcard.$error.pattern">银行卡号格式错误</span>
+                <span class="text-danger" ng-show="regForm.bankcard.$error.required">银行卡号为空</span>
+            </div>
+
+            <div class="form-group">
+                <button type="button" ng-click="doRegister()" class="btn btn-primary" ng-disabled="!regForm.$valid">提交</button>
+
+            </div>
+        </form>
+    </div>
+</div>
+<script src="lib/angular.js"></script>
+<script type="text/javascript">
+    var app = angular.module("app", []);
+
+    app.controller("c1", function ($scope, $http) {
+        $scope.telephone = "";
+        $scope.password = "";
+        $scope.paypwd = "";
+        $scope.bankcard = "";
+
+        $scope.error = false;
+
+        $scope.doRegister = function () {
+            $http.post("/register", {
+                telephone: $scope.telephone,
+                password: $scope.password,
+                paypwd: $scope.paypwd,
+                bankcard: $scope.bankcard
+            }).then(
+                function (resp) {
+                    if(resp.data.code === 100)
+                        window.location.href = "/login.html";
+
+                }, function (resp) {
+                    switch( resp.data.code) {
+                        case 101:
+                            $scope.error = 101;break;
+                        case 102:
+                            $scope.error = 102;break;
+                    }
+                })
+        }
+    });
+</script>
+</body>
+</html>

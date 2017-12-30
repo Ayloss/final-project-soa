@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>支付</title>
+    <link href="lib/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body ng-app="app" ng-controller="c1">
+<nav class="navbar navbar-default navbar-inverse navbar-static-top">
+    <div class="container-fluid">
+        <div class="navbar-collapse collapse pull-right">
+            <ul class="nav navbar-nav">
+                <li>
+                    <a href="#">登出</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<div class="container">
+    <div class="row">
+        <h1 class="page-header">支付</h1>
+    </div>
+
+    <div class="row" ng-show="stage === 1">
+        <h2>您确定要开始支付吗?</h2>
+        <button class="btn btn-primary" ng-click="beginPayment()">确认</button>
+    </div>
+
+    <div class="row"  ng-show="stage === 2">
+        <h2>订单生成中......<img src="img/loading.gif" width="50px" height="50px"> </h2>
+    </div>
+
+    <div ng-show="stage >= 3">
+        <div class="row">
+            <div class="col-xs-4">
+                <div class="panel panel-info ">
+                    <div class="panel-heading"></div>
+                    <h4>订单号:{{order.id}}</h4>
+                    <h4>商品类型:账户充值</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div ng-show="stage === 3">
+        <div class="row">
+            <h3 class="page-header">支付方式</h3>
+        </div>
+        <div class="row">
+
+            <div class="row">
+                <div class="col-xs-4">
+                    <input type="radio" value="ICBC" name="payway" ng-model="payway" ng-checked="true">
+                    <img src="img/icbc.png" width="200px" height="50px">
+                </div>
+            </div>
+            <hr/>
+        </div>
+        <div class="row">
+            <button type="button" class="btn btn-primary" ng-click="beginCheckPassword()">下一步</button>
+        </div>
+    </div>
+
+    <div ng-show="stage === 4">
+        <div class="row">
+            <h3 class="page-header">支付确认</h3>
+        </div>
+        <div class="row">
+            <form class="form-inline" name="paypwdForm">
+                <div class="form-group">
+                    <label>确认支付密码</label>
+                    <input class="form-control" type="text" name="paypwd" ng-model="paypwd" ng-pattern="/^\d{6}$/" required>
+                </div>
+                <div>
+                    <div class="text-danger" ng-show="paypwdForm.paypwd.$error.required">支付密码不能为空</div>
+                    <div class="text-danger" ng-show="paypwdForm.paypwd.$error.pattern">支付密码格式错误</div>
+                    <div class="text-warning" ng-show="verifyPaypwd.dirty && verifyPaypwd.verify">支付密码验证中<img src="img/loading.gif" width="20px" height="20px"></div>
+                    <div class="text-danger" ng-show="verifyPaypwd.dirty && !verifyPaypwd.verify && verifyPaypwd.error">支付密码错误</div>
+                </div>
+                <button type="button" class="btn btn-primary" ng-disabled="verifyPaypwd.verify || !paypwdForm.paypwd.$valid" ng-click="verifyPassword()">确认</button>
+            </form>
+        </div>
+
+    </div>
+
+    <div ng-show="stage === 5">
+        <div class="row">
+            <h2>支付进行中......<img src="img/loading.gif" width="50px" height="50px"></h2>
+        </div>
+    </div>
+</div>
+<script src="lib/angular.js"></script>
+<script type="text/javascript">
+    // 目标账户id
+    var targetId = 1;
+
+    var app = angular.module("app",[]);
+
+    app.controller("c1",function ($scope, $http) {
+        $scope.stage = 1;
+
+        $scope.payway = null;
+
+        $scope.beginPayment = function () {
+            $scope.stage = 2;
+
+            $http.post("/create-order",{
+                payerId:-1,//该项会从session中获取
+                targetId:targetId,
+                type:"账户充值"
+            }).then(function (resp) {
+                $scope.order = resp.data;
+
+                $scope.stage = 3;
+
+            },function (resp) {
+                if(resp.status === 401) {
+                    window.location.href = "login.html"
+                }
+            })
+        };
+
+        $scope.beginCheckPassword = function () {
+            $scope.paypwd = "";
+
+            $scope.verifyPaypwd = {
+                dirty:false,// 密码未验证过
+                verify:false,// 密码验证中
+                error:false,// 错误
+                valid:false//正确
+            };
+            $scope.stage = 4;
+        };
+
+        function doPayment() {
+            $http.post("/do-pay",{
+                paymentKey:$scope.order.paymentKey
+            }).then(function (resp) {
+                if(resp.data.code === 100) {
+                    window.location.href = "payment-done.html";
+                }
+            }).then(function (resp) {
+                if(resp.status === 401) {
+                    window.location.href = "login.html"
+                }
+
+                window.location.href = "payment-done.html?errorCode=" + resp.data.code
+            })
+        }
+
+        $scope.verifyPassword = function () {
+
+            if(!confirm("确认执行支付?")) return;
+
+            $scope.verifyPaypwd.dirty = true;
+            $scope.verifyPaypwd.verify = true;
+
+            $http.post("/verify-pay-password", {
+                id:-1,//该项会从session中获取
+                paypwd:$scope.paypwd
+            }).then(function (resp) {
+                $scope.verifyPaypwd.verify =false;
+                if(resp.data.code === 100) {
+                    $scope.verifyPaypwd.dirty = true;
+                    $scope.verifyPaypwd.error = false;
+                    $scope.verifyPaypwd.valid = true;
+
+                    $scope.stage = 5;
+
+                    doPayment();
+                }
+            },function (resp) {
+                if(resp.status === 401) {
+                    window.location.href = "login.html"
+                }
+
+                $scope.verifyPaypwd.verify =false;
+                if(resp.data.code === 101) {
+                    $scope.verifyPaypwd.dirty = true;
+                    $scope.verifyPaypwd.error = true;
+                    $scope.verifyPaypwd.valid = false;
+                }
+
+            });
+        }
+
+    })
+</script>
+</body>
+</html>
