@@ -37,7 +37,7 @@
  - 客户端：调用各类服务组成业务逻辑。
 
 服务之间的调用呈现以下结构：
-![image](http://note.youdao.com/favicon.ico)
+![image](https://github.com/StatusCode200/final-project-soa/blob/master/img/network.png)
 
 ## 数据表
 数据库一共三张表
