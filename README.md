@@ -1,6 +1,5 @@
 # SOA Final Project
 使用Spring Cloud模拟分布式的支付交易。  
-不过由于时间紧迫没有仔细思考业务逻辑就做了，只是非常简单的一个demo。
 ## 启动
  - 将工程导入idea
  - 添加8个maven模块到maven。
@@ -129,8 +128,8 @@ POST /order | 创建订单。
 POST /do-pay | 执行支付。
 
 ### 创建订单
-1.根据订单的类型，支付方id，收款方id创建订单
-2.对每个订单根据以上三个属性生成paymentKey
+1. 根据订单的类型，支付方id，收款方id创建订单
+2. 对每个订单根据以上三个属性生成paymentKey
 
 ### 执行支付
 1. 调用bank-transfer服务执行转账
