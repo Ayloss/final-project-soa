@@ -35,7 +35,7 @@
  - 服务消费者：调用服务提供者的服务，同时作为使用服务的入口，提供负载均衡。
  - 客户端：调用各类服务组成业务逻辑。
 
-服务之间的调用呈现以下结构：
+系统结构如下
 ![image](https://github.com/StatusCode200/final-project-soa/blob/master/img/network.png)
 
 ## 数据表
@@ -88,10 +88,14 @@ id_numer|身份证号
 2. 调用bank-transfer的服务验证银行卡号是否存在
 3. 调用pay-authority的服务执行注册操作
 
+BPMN图如下
+![image](https://github.com/StatusCode200/final-project-soa/blob/master/img/register.png)
 ### 登录
 1. 调用pay-autority的服务验证用户名密码，获得用户实体。
 2. 将用户信息放入session。(因为还要配置安全模块比较麻烦，因此直接将用户信息放入session中)
 
+BPMN图如下
+![image](https://github.com/StatusCode200/final-project-soa/blob/master/img/login.png)
 ### 创建订单
 1. 从session中获得用户id
 2. 调用pay服务创建订单
@@ -103,7 +107,8 @@ id_numer|身份证号
 ### 执行支付
 1. 调用pay的服务执行支付
 
-
+创建订单、验证支付密码、执行支付可以合为支付流程，BPMN图如下
+![image](https://github.com/StatusCode200/final-project-soa/blob/master/img/pay.png)
 ## 支付权限服务提供者
 该服务提供者包含了以下服务，由于每个服务都是简单地查询数据库，因此不进行详细说明
 
